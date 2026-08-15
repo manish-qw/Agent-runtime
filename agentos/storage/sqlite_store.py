@@ -4,6 +4,7 @@ from datetime import datetime
 from agentos.core.agent import Agent
 from agentos.core.task import Task
 from agentos.core.state import AgentState
+from agentos.core.checkpoint import Checkpoint, CheckpointCorruptError
 
 class SQLiteStore:
     def __init__(self, db_path: str = "agentos.db"):
@@ -21,6 +22,12 @@ class SQLiteStore:
                     created_at TEXT NOT NULL,
                     metadata TEXT NOT NULL,
                     tokens_used INTEGER NOT NULL DEFAULT 0
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS checkpoints (
+                    agent_id TEXT PRIMARY KEY,
+                    checkpoint_data TEXT NOT NULL
                 )
             """)
             conn.commit()
@@ -93,3 +100,43 @@ class SQLiteStore:
             agent.token_usage = db_tokens_used
             
             return agent
+
+    def save_checkpoint(self, checkpoint: Checkpoint):
+        """Saves a checkpoint to the checkpoints table."""
+        data = {
+            "state": checkpoint.state.name,
+            "conversation_history": checkpoint.conversation_history,
+            "task_progress_marker": checkpoint.task_progress_marker,
+            "timestamp": checkpoint.timestamp.isoformat()
+        }
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO checkpoints (agent_id, checkpoint_data)
+                VALUES (?, ?)
+                ON CONFLICT(agent_id) DO UPDATE SET
+                    checkpoint_data=excluded.checkpoint_data
+            """, (checkpoint.agent_id, json.dumps(data)))
+            conn.commit()
+
+    def load_checkpoint(self, agent_id: str) -> Checkpoint:
+        """Loads a checkpoint. Raises CheckpointCorruptError if JSON is malformed."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT checkpoint_data FROM checkpoints WHERE agent_id = ?", (agent_id,))
+            row = cursor.fetchone()
+            
+            if not row:
+                return None
+                
+            try:
+                data = json.loads(row[0])
+                return Checkpoint(
+                    agent_id=agent_id,
+                    state=AgentState[data["state"]],
+                    conversation_history=data.get("conversation_history", []),
+                    task_progress_marker=data.get("task_progress_marker", "init"),
+                    timestamp=datetime.fromisoformat(data["timestamp"])
+                )
+            except (json.JSONDecodeError, KeyError, ValueError) as e:
+                raise CheckpointCorruptError(f"Checkpoint for {agent_id} is corrupt: {str(e)}")

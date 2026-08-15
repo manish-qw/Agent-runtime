@@ -24,7 +24,7 @@ class Agent:
             AgentState.RUNNING: [AgentState.BLOCKED, AgentState.COMPLETED, AgentState.FAILED],
             AgentState.BLOCKED: [AgentState.READY],
             AgentState.COMPLETED: [],
-            AgentState.FAILED: []
+            AgentState.FAILED: [AgentState.READY]  # Allow retry/resume
         }
 
         if new_state not in valid_transitions[self.state]:
