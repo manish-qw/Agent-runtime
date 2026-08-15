@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+progress.md
+
+# Virtual Environment
+.venv/
+env/
+venv/
+
+# Environment Variables (API Keys)
+.env
+.env.local
+
+# Databases
+*.db
+*.sqlite3
+
+# Test caches
+.pytest_cache/
