@@ -87,10 +87,11 @@ def test_kill_mid_write(store):
     store.save_agent(agent)
     
     # We do NOT call any cleanup on store, we just simulate the OS process dying
+    db_path = store.db_path
     del store 
     
     # Another process wakes up later and checks the database
-    new_store = SQLiteStore(db_path="test_runtime.db")
+    new_store = SQLiteStore(db_path=db_path)
     loaded = new_store.load_agent("agent_4")
     
     assert loaded.id == "agent_4"
