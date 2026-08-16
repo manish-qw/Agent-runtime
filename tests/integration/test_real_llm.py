@@ -9,8 +9,8 @@ from agentos.llm.client import GeminiLLMClient
 from agentos.runtime.real_agents import coding_agent_task
 from agentos.runtime.real_agents import research_agent_task
 
-# Load .env file
-load_dotenv()
+# Load .env file and override any system variables
+load_dotenv(override=True)
 
 # Skip these tests if no API key is set
 pytestmark = pytest.mark.skipif(
@@ -87,3 +87,72 @@ def test_real_gemini_multiple_agents_concurrently(store):
         assert loaded.state == AgentState.COMPLETED
         assert loaded.token_usage > 0
         assert results[agent_id] is not None
+
+def test_real_tool_calling_agent_crash_and_recovery(store):
+    """
+    End-to-End Integration Test:
+    1. Spawn a tool_calling_agent_task with `simulate_crash=True`.
+    2. Verify it crashes (FAILED state) after successfully making a Tool Call and checkpointing it.
+    3. Run `bootstrap_recovery()` to rescue it (FAILED -> READY).
+    4. Re-execute the agent to prove it resumes from the Checkpoint and successfully completes.
+    """
+    from agentos.runtime.real_agents import tool_calling_agent_task
+    from agentos.tools.math_tools import add
+    
+    runtime = Runtime(store=store)
+    agent_id = "tool_agent_crash_1"
+    
+    # 0. Setup
+    task = Task(id=f"t_{agent_id}", description="Integration Test Tool Crash", created_time=datetime.now())
+    agent = Agent(agent_id=agent_id, task=task)
+    agent.transition_to(AgentState.READY)
+    store.save_agent(agent)
+    
+    prompt = "What is 150 added to 250? You MUST use the add tool."
+    tools = [add]
+    
+    # 1. First Execution (Programmed to Crash)
+    runtime.execute(
+        agent_id=agent_id,
+        agent_callable=lambda: tool_calling_agent_task(store, agent_id, prompt, tools, simulate_crash=True),
+        timeout=60
+    )
+    
+    # 2. Verify Crash
+    crashed_agent = store.load_agent(agent_id)
+    assert crashed_agent.state == AgentState.FAILED
+    
+    checkpoint = store.load_checkpoint(agent_id)
+    assert checkpoint is not None
+    assert checkpoint.task_progress_marker == "crashed_once"
+    # Verify the tool call was actually recorded in the checkpoint
+    has_tool_call = False
+    for msg in checkpoint.conversation_history:
+        if isinstance(msg, dict) and "parts" in msg:
+            for part in msg["parts"]:
+                if "functionCall" in part or "function_call" in part:
+                    has_tool_call = True
+    assert has_tool_call, "The checkpoint did not record a tool call before crashing."
+    
+    # 3. OS Bootloader Recovery
+    runtime.bootstrap_recovery()
+    
+    recovered_agent = store.load_agent(agent_id)
+    assert recovered_agent.state == AgentState.READY
+    
+    # 4. Second Execution (Resume from Checkpoint)
+    # We set simulate_crash=False so it finishes.
+    result = runtime.execute(
+        agent_id=agent_id,
+        agent_callable=lambda: tool_calling_agent_task(store, agent_id, prompt, tools, simulate_crash=False),
+        timeout=60
+    )
+    
+    # 5. Verify Completion
+    completed_agent = store.load_agent(agent_id)
+    assert completed_agent.state == AgentState.COMPLETED
+    assert result is not None
+    assert "400" in result
+    
+    final_checkpoint = store.load_checkpoint(agent_id)
+    assert final_checkpoint.task_progress_marker == "completed"
