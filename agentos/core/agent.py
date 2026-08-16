@@ -14,6 +14,15 @@ class Agent:
         self.execution_history = []
         self.token_usage = 0
         self.checkpoint_location = None
+        
+        # Benchmark Metrics
+        self.run_id = None
+        self.scheduler_type = None
+        self.submit_time = datetime.now()
+        self.start_time = None
+        self.end_time = None
+        self.num_retries = 0
+        self.checkpoint_count = 0
 
     def transition_to(self, new_state: AgentState):
         """Transitions the agent to a new state based on allowed rules."""
@@ -21,7 +30,7 @@ class Agent:
         valid_transitions = {
             AgentState.CREATED: [AgentState.READY],
             AgentState.READY: [AgentState.RUNNING],
-            AgentState.RUNNING: [AgentState.BLOCKED, AgentState.COMPLETED, AgentState.FAILED],
+            AgentState.RUNNING: [AgentState.BLOCKED, AgentState.COMPLETED, AgentState.FAILED, AgentState.READY],
             AgentState.BLOCKED: [AgentState.READY],
             AgentState.COMPLETED: [],
             AgentState.FAILED: [AgentState.READY]  # Allow retry/resume
