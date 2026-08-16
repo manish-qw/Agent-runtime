@@ -6,16 +6,10 @@ from agentos.storage.sqlite_store import SQLiteStore
 DB_PATH = "test_runtime.db"
 
 @pytest.fixture
-def store():
-    if os.path.exists(DB_PATH):
-        os.remove(DB_PATH)
-    store = SQLiteStore(db_path=DB_PATH)
+def store(tmp_path):
+    db_path = str(tmp_path / "test_runtime.db")
+    store = SQLiteStore(db_path=db_path)
     yield store
-    if os.path.exists(DB_PATH):
-        try:
-            os.remove(DB_PATH)
-        except PermissionError:
-            pass
 
 @pytest.fixture(autouse=True)
 def cleanup_dummy_agents():
