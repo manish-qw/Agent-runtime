@@ -33,8 +33,8 @@ def run_fault_isolation_benchmark():
     scheduler = FIFOScheduler()
     runtime = Runtime(store, max_workers=10, scheduler=scheduler)
     
-    total_agents = 100
-    crash_rate = 0.20 # 20% crash rate
+    total_agents = 1000
+    crash_rate = 0.30 # 20% crash rate
     num_crashing = int(total_agents * crash_rate)
     num_healthy = total_agents - num_crashing
     
@@ -43,10 +43,12 @@ def run_fault_isolation_benchmark():
     print(f" - {num_crashing} poison-pill agents (intentionally crash with RuntimeError)")
     
     agents = []
-    # Mix them up so it's not all healthy first
+    import random
+    # Randomly select exact indices for the poison agents to perfectly match crash_rate
+    poison_indices = set(random.sample(range(total_agents), num_crashing))
+    
     for i in range(total_agents):
-        # Every 5th agent is poison
-        is_poison = (i % 5 == 0)
+        is_poison = (i in poison_indices)
         
         agent_id = f"b3_a{i}_{'poison' if is_poison else 'healthy'}"
         task = Task(id=f"t_{agent_id}", description="Fault Isolation Test", created_time=datetime.now())
