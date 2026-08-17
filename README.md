@@ -24,32 +24,46 @@ AgentOS is built on four core pillars:
 
 ---
 
-## 📊 Scientific Benchmarks
+## 📂 Directory Structure
 
-AgentOS is highly opinionated about performance. We don't guess—we benchmark.
+| Directory / File | Purpose |
+|------------------|---------|
+| `agentos/core/` | **The Process Control Block (PCB):** Defines `Agent`, `Task`, and strict state transitions (`READY`, `RUNNING`, `FAILED`). |
+| `agentos/storage/` | **The Kernel Disk:** SQLite abstraction with WAL mode enabled to natively checkpoint LLM conversational history. |
+| `agentos/scheduler/`| **The OS Queues:** Implementations of `FIFOScheduler`, `PriorityScheduler`, and the proprietary `TokenAwareScheduler`. |
+| `agentos/runtime/` | **The Execution Sandbox:** ThreadPool-based engine that runs agent `callables`, isolating crashes and handling timeouts. |
+| `agentos/tools/` | **The System Calls:** Native tools for agents to interact with the external world (FileSystem, Math, Vertex Search, Weather). |
+| `benchmarks/` | **The Performance Tests:** Stress-testing scripts that prove fault isolation, scheduler efficiency, and checkpoint recovery. |
+| `main.py` | **The OS Bootloader:** Initializes the database, runs `bootstrap_recovery()` to resume crashed agents, and spins up the infinite polling event loop. |
+
+---
+
+## 📊 Performance Benchmarks
+
+AgentOS is designed to be rigorously tested at scale.
 
 ### Benchmark 1: Checkpoint Recovery Efficiency
 **The Problem:** When a multi-step agent (e.g. 10 API calls) crashes on step 9, naive scripts restart from step 1, burning massive amounts of tokens and wall-clock time.
 **The Solution:** AgentOS's native Checkpoint Resume capability.
 
-![Benchmark 1: Checkpoint Efficiency](benchmark1_checkpoint.png)
+<img src="benchmark1_checkpoint.png" width="600" alt="Benchmark 1: Checkpoint Efficiency">
 *Result: Checkpoint-based recovery reduces token consumption by ~49.5% and completion time by ~29.1% versus cold-restart when recovering a crashed 10-step agent.*
 
 ### Benchmark 2: Scheduler Comparison Under Token Budget
 **The Problem:** Firing 100 concurrent agents simultaneously will organically trigger `429 Rate Limit` storms, forcing exponential backoffs and destroying throughput.
 **The Solution:** AgentOS's `TokenAwareScheduler` limits concurrency dynamically.
 
-![Benchmark 2: 429 Errors](benchmark2_errors.png)
+<img src="benchmark2_errors.png" width="600" alt="Benchmark 2: 429 Errors">
 *Result: TokenAware scheduling prevents Vertex AI 429 API rate-limit errors entirely compared to the naive FIFOScheduler.*
 
-![Benchmark 2: P95 Times](benchmark2_p95.png)
+<img src="benchmark2_p95.png" width="600" alt="Benchmark 2: P95 Times">
 *Result: By protecting the token pipeline, the TokenAware Scheduler drastically reduces P95 completion times for High-Priority agents.*
 
 ### Benchmark 3: Fault Isolation & Reliability
 **The Problem:** Concurrent threaded execution is extremely fragile. One rogue agent can crash the overarching Python process, killing all concurrent siblings.
 **The Solution:** AgentOS `Runtime.execute` sandboxing.
 
-![Benchmark 3: Fault Isolation](benchmark3_fault.png)
+<img src="benchmark3_fault.png" width="600" alt="Benchmark 3: Fault Isolation">
 *Result: When injecting a fatal crash randomly into 90% of a 1,000-agent swarm, AgentOS isolated 100% of the injected faults. The overarching OS event loop remained perfectly stable, ensuring exactly 10% of sibling agents completed their work undisturbed despite 900 concurrent runtime crashes.*
 
 ---
