@@ -1,6 +1,19 @@
 # AgentOS Progress Log
 
+## 2026-08-16 - Vertex AI Integration, OS Event Loop & Benchmarking Plan
+
+**What changed**:
+- Fully integrated Google Cloud Vertex AI support natively into `agentos/llm/client.py` and `real_agents.py`. The system now dynamically routes to Vertex AI if `GOOGLE_CLOUD_PROJECT` is provided in `.env`, bypassing standard Developer API rate limits.
+- Refactored `GEMINI_MODEL_NAME` to be strictly required and dynamically fetched from `.env`, removing all hardcoded fallback assumptions (like `gemini-2.5-flash`). Created a comprehensive `.env.example`.
+- Completely rewrote `main.py` from a legacy hardcoded test script into a True OS Event Loop. It now boots, runs `bootstrap_recovery()`, queues all historical and new agents, and infinitely polls `scheduler.get_next()` to dynamically drain the queue.
+- Updated integration test `skipif` decorators to support both Vertex AI and standard Gemini API keys to prevent accidental test skips.
+- Created `benchmarks/` directory and finalized an 8-rule experimental methodology implementation plan for rigorous Phase 1 performance benchmarking (fixing workloads, capping `max_output_tokens=500`, setting `temperature=0`, and randomizing strategy execution).
+
+**Why**:
+- The OS needs to be rigorously tested under controlled, scientific conditions (Milestone 6). Moving to Vertex AI solves free-tier rate limits during stress tests. Rewriting `main.py` into a genuine event loop proves that the `TokenAwareScheduler` actually functions in practice, completely automating the recovery and resumption of crashed checkpoints.
+
 ## 2026-08-16 - Production Hardening, SQLite WAL & Bug Fixes
+
 
 **What changed**:
 - Fixed the `PermissionError: [WinError 5] Access is denied` bug on Windows by adding `addopts = --basetemp=tmp_pytest` to `pytest.ini`. This isolated the pytest temporary directory from global file locks caused by crashed database connections.

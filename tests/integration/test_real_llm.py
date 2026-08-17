@@ -12,10 +12,13 @@ from agentos.runtime.real_agents import research_agent_task
 # Load .env file and override any system variables
 load_dotenv(override=True)
 
-# Skip these tests if no API key is set
+# Skip these tests if no API credentials are provided
+has_vertex = bool(os.environ.get("GOOGLE_CLOUD_PROJECT"))
+has_api_key = bool(os.environ.get("GEMINI_API_KEY"))
+
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("GEMINI_API_KEY"),
-    reason="GEMINI_API_KEY environment variable not set"
+    not (has_vertex or has_api_key),
+    reason="Neither Vertex AI (GOOGLE_CLOUD_PROJECT) nor GEMINI_API_KEY is configured"
 )
 
 def test_real_gemini_coding_agent(store):
