@@ -64,10 +64,10 @@ def run_scheduler_trial(trial_num: int, scheduler_name: str) -> dict:
     
     start_time = time.time()
     
-    # Create 100 agents (80 low priority, 20 high priority)
+    # Create 200 agents (160 low priority, 40 high priority)
     agents = []
-    for i in range(100):
-        priority = 10 if i < 20 else 0 # First 20 are High priority agents
+    for i in range(200):
+        priority = 40 if i < 40 else 0 # First 40 are High priority agents
         agent_id = f"b2_{scheduler_name}_t{trial_num}_a{i}"
         
         task = Task(id=f"t_{agent_id}", description="3-step math", created_time=datetime.now())
@@ -122,17 +122,17 @@ def run_scheduler_trial(trial_num: int, scheduler_name: str) -> dict:
     while True:
         completed = store.get_agents_by_state(AgentState.COMPLETED)
         failed = store.get_agents_by_state(AgentState.FAILED)
-        if len(completed) + len(failed) >= 100:
+        if len(completed) + len(failed) >= 200:
             break
         time.sleep(2)
-        print(f"  Progress: {len(completed) + len(failed)}/100 agents completed...")
+        print(f"  Progress: {len(completed) + len(failed)}/200 agents completed...")
         
     exit_flag[0] = True
     end_time = time.time()
     
     # Analyze high-priority completion times
     high_pri_times = []
-    for agent in agents[:20]:
+    for agent in agents[:40]:
         updated_agent = store.load_agent(agent.id)
         if updated_agent.end_time and updated_agent.start_time:
             high_pri_times.append((updated_agent.end_time - updated_agent.start_time).total_seconds())
@@ -156,7 +156,7 @@ def main():
     args = parser.parse_args()
     
     print("Starting Benchmark 2: Scheduler Comparison Under Token Budget")
-    print(f"This will submit 100 agents to Vertex AI concurrently using the {args.scheduler.upper()} scheduler.")
+    print(f"This will submit 200 agents to Vertex AI concurrently using the {args.scheduler.upper()} scheduler.")
     
     results = []
     print(f"\n==============================")
