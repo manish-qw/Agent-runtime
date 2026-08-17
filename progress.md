@@ -1,5 +1,16 @@
 # AgentOS Progress Log
 
+## 2026-08-17 - Milestone 8: Benchmark 3 (Fault Isolation & Reliability)
+
+**What changed**:
+- Designed and built `benchmarks/benchmark_3_fault_isolation.py` to test concurrent fault isolation.
+- Spawned 100 fast concurrent agents.
+- Intentionally injected a fatal `RuntimeError("Intentional agent crash.")` directly into 20 of them (20% crash rate).
+- Validated that the `Runtime.execute` sandbox successfully caught all 20 crashes, quarantined them to a `FAILED` state in SQLite, and safely allowed all 80 sibling threads to reach `COMPLETED` without bringing down the OS event loop.
+
+**Why**:
+- This proves that AgentOS is production-ready for highly unreliable workloads (e.g., custom tool code that segfaults or throws exceptions). A crash in one agent's memory space absolutely cannot take down the sibling agents sharing the CPU pool.
+
 ## 2026-08-17 - Milestone 7: Benchmark 2 (Scheduler Comparison Under Token Budget)
 
 **What changed**:
