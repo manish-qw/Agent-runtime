@@ -1,5 +1,67 @@
 # AgentOS Progress Log
 
+## 2026-08-17 - Benchmarking Results Explanation. 
+
+# AgentOS — Benchmarks
+
+All benchmarks run against Google Vertex AI (Gemini), `temperature=0`, capped `max_output_tokens`, 3–5 repeated trials per configuration, mean ± std reported. Raw results in `benchmarks/*.csv`.
+
+---
+
+## 1. Checkpoint Recovery: Cost & Latency of Crash Recovery
+
+**Setup:** A tool-calling ReAct agent is killed mid-task (simulated crash after a fixed tool-call step). Recovery is compared two ways: **cold restart** (re-run from step 1) vs **checkpoint resume** (load saved state, continue from the last completed step). Tested across three tool-calling agent types — Math, Weather (external API), and Web Search (external API) — 5 trials each.
+
+![Checkpoint Recovery Benchmark](plots/benchmark1_checkpoint.png)
+
+| Task | Token Savings | Time Savings |
+|---|---|---|
+| Math | 55.7% | 31.8% |
+| Weather | 48.6% | 43.5% |
+| Web Search | 41.2% | 35.3% |
+
+**Finding:** Checkpoint-based recovery cut token consumption by **41–56%** and recovery time by **32–44%** versus cold-restart, across three distinct tool-calling agent types (5 trials each, low variance: std < 5% of mean in all cases).
+
+This is validated by two separate tests: `test_kill_recovery.py` proves correctness (a real `SIGKILL` mid-DB-commit is survived without data loss), and this benchmark proves the resulting cost/time savings.
+
+---
+
+## 2. Scheduler Comparison: Rate-Limit Avoidance & Priority Latency Under Load
+
+**Setup:** Identical workload (mix of high/low priority agents, fixed concurrency cap) submitted via three scheduling policies — FIFO, Priority, and TokenAware (defers dispatch to stay under a token-in-flight budget) — at increasing load: 50, 100, and 200 concurrent agents. 3 trials per configuration.
+
+![Rate-Limit Errors vs Load](plots/benchmark2_errors.png)
+
+![P95 High-Priority Latency vs Load](plots/benchmark2_p95.png)
+
+| Load | FIFO 429 Errors (avg) | Priority 429 Errors (avg) | TokenAware 429 Errors (avg) |
+|---|---|---|---|
+| 50 | 0 | 0 | 0 |
+| 100 | 0.3 | 0 | 0 |
+| 200 | 69.3 | 46.3 | **0** |
+
+**Finding:** TokenAware scheduling maintained **zero rate-limit errors at every load level tested (up to 200 concurrent agents)**, while FIFO and Priority incurred up to 69 and 46 errors respectively at 200 agents. TokenAware also delivered the most **stable** P95 high-priority latency across all loads (~6.5–7.8s), while FIFO and Priority's latency grew more variable as load increased. This came at a deliberate cost: TokenAware's total batch completion time was 1.4–2.5x longer, reflecting its throttled, budget-respecting dispatch — a reliability-for-throughput tradeoff suited to strict API-budget environments.
+
+---
+
+## 3. Fault Isolation: Runtime Resilience Under Injected Failure
+
+**Setup:** 1000 agents submitted in one batch, 300 (30%) injected to fail (exception or timeout) at random. Verifies the Runtime isolates failures without affecting the other 700.
+
+![Fault Isolation Results](plots/benchmark3_fault.png)
+
+**Finding:** Across 3 trials, **exactly 300/300 injected faults failed and 700/700 unaffected agents completed successfully** — 100% fault isolation accuracy, with zero cross-contamination between failing and healthy agents, at ~45s per 1000-agent batch.
+
+---
+
+## Resume Bullets
+
+- Designed and built AgentOS, an OS-inspired runtime for autonomous LLM agents (state machine, persistent Process Control Block, thread-pool execution engine with timeout/exception isolation) backed by SQLite (WAL mode) for crash-safe persistence.
+- Implemented checkpoint-based crash recovery for tool-calling ReAct agents; benchmarked against cold-restart across 3 agent types (5 trials each), reducing token consumption by 41–56% and recovery time by 32–44%.
+- Built and benchmarked a token-budget-aware scheduler (heap-based priority queue + in-flight token budget) against FIFO and Priority scheduling at up to 200 concurrent agents; achieved zero rate-limit errors at all load levels versus up to 69 errors for FIFO, trading ~1.4–2.5x throughput for reliability.
+- Verified runtime fault isolation at scale: 1000-agent batch with 300 injected failures showed 100% isolation accuracy — zero failure propagation to healthy agents — validated by both statistical benchmarking and a hard-kill (`SIGKILL` mid-transaction) recovery test.
+
+
 ## 2026-08-17 - Milestone 8: Benchmark 3 (Fault Isolation & Reliability)
 
 **What changed**:

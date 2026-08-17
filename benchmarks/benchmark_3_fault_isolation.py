@@ -34,7 +34,7 @@ def run_fault_isolation_benchmark():
     runtime = Runtime(store, max_workers=10, scheduler=scheduler)
     
     total_agents = 1000
-    crash_rate = 0.30 # 20% crash rate
+    crash_rate = 0.90 # 20% crash rate
     num_crashing = int(total_agents * crash_rate)
     num_healthy = total_agents - num_crashing
     

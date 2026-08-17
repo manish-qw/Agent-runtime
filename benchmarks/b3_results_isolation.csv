@@ -1,2 +1,2 @@
 total_agents,injected_faults,actual_failed,expected_completed,actual_completed,time
-1000,300,300,700,700,44.61149740219116
+1000,900,900,100,100,16.125296115875244
