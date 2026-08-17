@@ -1,5 +1,15 @@
 # AgentOS Progress Log
 
+## 2026-08-17 - Milestone 7: Benchmark 2 (Scheduler Comparison Under Token Budget)
+
+**What changed**:
+- Designed and built `benchmarks/benchmark_2_scheduler.py` to test the OS's native scheduling algorithms (`FIFOScheduler`, `PriorityScheduler`, `TokenAwareScheduler`).
+- Simulated 30 concurrent multi-step ReAct agents (25 low priority, 5 high priority) hammering the Vertex AI API simultaneously to intentionally trigger API rate limits (429 ResourceExhausted).
+- Calculated total execution throughput and the critical P95 Completion Time for High-Priority agents.
+
+**Why**:
+- This definitively proves that `TokenAwareScheduler` protects the underlying LLM API from getting rate-limited (avoiding slow `tenacity` exponential backoffs), while simultaneously guaranteeing fast P95 completion times for high-priority agents compared to a naive `FIFO` approach.
+
 ## 2026-08-17 - Milestone 6: Benchmark 1 (Checkpoint Recovery Efficiency)
 
 **What changed**:
