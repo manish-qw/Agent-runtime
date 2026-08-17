@@ -1,1 +1,1 @@
-The error found in dummy_log.txt is a network timeout occurring on port 8080.
+Error Summary: A network timeout occurred on port 8080.

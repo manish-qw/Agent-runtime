@@ -16,7 +16,7 @@ def coding_agent_task(client: LLMClient, question: str) -> tuple[str, int]:
     prompt = f"You are an expert programmer. Please write a clean, well-structured code solution for the following question:\n\n{question}"
     return client.generate(prompt)
 
-def tool_calling_agent_task(store, agent_id: str, instructions: str, tools: list, simulate_crash: bool = False) -> tuple[str, int]:
+def tool_calling_agent_task(store, agent_id: str, instructions: str, tools: list, crash_at_tool_call: int = 0) -> tuple[str, int]:
     """
     A "True Agent" that executes a ReAct loop with manual tool calling and SQLite Checkpoints.
     It takes a Checkpoint snapshot AFTER EVERY SINGLE TOOL CALL.
@@ -152,11 +152,19 @@ def tool_calling_agent_task(store, agent_id: str, instructions: str, tools: list
                 checkpoint.conversation_history.append(user_content.model_dump(exclude_none=True, mode='json'))
                 store.save_checkpoint(checkpoint)
                 
-                # SIMULATE A CRASH AFTER FIRST BATCH OF TOOL CALLS
-                if simulate_crash and checkpoint.task_progress_marker == "running":
-                    checkpoint.task_progress_marker = "crashed_once"
+                # Count how many tool calls have been made in this entire conversation
+                tool_call_count = 0
+                for msg in checkpoint.conversation_history:
+                    if isinstance(msg, dict) and "parts" in msg:
+                        for p in msg["parts"]:
+                            if "functionCall" in p or "function_call" in p:
+                                tool_call_count += 1
+                                
+                # SIMULATE A CRASH AT A SPECIFIC TOOL CALL STEP
+                if crash_at_tool_call > 0 and tool_call_count >= crash_at_tool_call and checkpoint.task_progress_marker != f"crashed_at_{crash_at_tool_call}":
+                    checkpoint.task_progress_marker = f"crashed_at_{crash_at_tool_call}"
                     store.save_checkpoint(checkpoint)
-                    raise Exception(f"Simulated crash after executing tools")
+                    raise Exception(f"Simulated crash after executing tool call #{tool_call_count}")
                 
                 # Loop back to API to pass the tool responses
                 continue

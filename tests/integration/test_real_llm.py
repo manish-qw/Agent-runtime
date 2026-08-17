@@ -117,7 +117,7 @@ def test_real_tool_calling_agent_crash_and_recovery(store):
     # 1. First Execution (Programmed to Crash)
     runtime.execute(
         agent_id=agent_id,
-        agent_callable=lambda: tool_calling_agent_task(store, agent_id, prompt, tools, simulate_crash=True),
+        agent_callable=lambda: tool_calling_agent_task(store, agent_id, prompt, tools, crash_at_tool_call=1),
         timeout=60
     )
     
@@ -127,7 +127,7 @@ def test_real_tool_calling_agent_crash_and_recovery(store):
     
     checkpoint = store.load_checkpoint(agent_id)
     assert checkpoint is not None
-    assert checkpoint.task_progress_marker == "crashed_once"
+    assert checkpoint.task_progress_marker == "crashed_at_1"
     # Verify the tool call was actually recorded in the checkpoint
     has_tool_call = False
     for msg in checkpoint.conversation_history:
@@ -147,7 +147,7 @@ def test_real_tool_calling_agent_crash_and_recovery(store):
     # We set simulate_crash=False so it finishes.
     result = runtime.execute(
         agent_id=agent_id,
-        agent_callable=lambda: tool_calling_agent_task(store, agent_id, prompt, tools, simulate_crash=False),
+        agent_callable=lambda: tool_calling_agent_task(store, agent_id, prompt, tools, crash_at_tool_call=0),
         timeout=60
     )
     
