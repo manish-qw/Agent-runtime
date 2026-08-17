@@ -1,0 +1,4 @@
+trial_num,scheduler,total_time,p95_high_pri_time,rate_limit_errors
+1,fifo,47.19864201545715,10.62253875,0
+2,fifo,48.078991174697876,13.54440935,0
+3,fifo,48.44494104385376,12.7987984,0
