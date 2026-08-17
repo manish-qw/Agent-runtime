@@ -28,8 +28,25 @@ def tool_calling_agent_task(store, agent_id: str, instructions: str, tools: list
     from google.genai import types
     import json
     
-    # Initialize the raw genai client with hard socket timeout
-    genai_client = genai.Client(http_options=types.HttpOptions(timeout=60000))
+    import os
+    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    location = os.environ.get("GOOGLE_CLOUD_LOCATION")
+    
+    if project:
+        genai_client = genai.Client(
+            vertexai=True,
+            project=project,
+            location=location,
+            http_options=types.HttpOptions(timeout=60000)
+        )
+    else:
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("Either Vertex AI credentials (GOOGLE_CLOUD_PROJECT) or GEMINI_API_KEY must be provided.")
+        genai_client = genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(timeout=60000)
+        )
     
     checkpoint = store.load_checkpoint(agent_id)
     if not checkpoint:
@@ -75,14 +92,16 @@ def tool_calling_agent_task(store, agent_id: str, instructions: str, tools: list
             reraise=True
         )
         def _call_api():
-            import os
-            model_name = os.environ.get('GEMINI_MODEL', 'gemini-2.5-flash')
+            model_name = os.environ.get('GEMINI_MODEL_NAME')
+            if not model_name:
+                raise ValueError("GEMINI_MODEL_NAME must be set in environment variables")
             return genai_client.models.generate_content(
                 model=model_name,
                 contents=contents,
                 config=types.GenerateContentConfig(
                     tools=tools, 
                     temperature=0,
+                    max_output_tokens=500,
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
                 )
             )
