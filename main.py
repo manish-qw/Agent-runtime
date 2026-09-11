@@ -22,7 +22,7 @@ def route_tools_and_prompt(agent_id: str):
     elif agent_id.startswith("fs"):
         return [list_files, read_file, write_file], "List the files in the current directory ('.'). Find the file named 'dummy_log.txt', read it, summarize the error you find, and write that summary into a new file called 'report.txt'."
     elif agent_id.startswith("world"):
-        return [get_weather, search_web], "What is the current weather in Tokyo? After finding out, search the web for 'things to do in Tokyo when it is [insert weather condition here]'."
+        return [get_weather, search_web], "What is the current weather in Kharagpur, West Bengal ? After finding out, search the web for 'things to do in Tokyo when it is [insert weather condition here]'."
     return [], "Tell me a joke."
 
 def main():

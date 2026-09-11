@@ -1,5 +1,86 @@
 # AgentOS Progress Log
 
+## Full Benchmarks : 
+BenchMark - 1:
+Maths Tool :
+trial_num,strategy,tokens,time 1,cold_restart,4152,22.29115390777588 1,checkpoint_resume,1839,14.221585512161255 2,cold_restart,4152,21.25777792930603 2,checkpoint_resume,1840,13.93331527709961 3,cold_restart,4152,20.858200311660767 3,checkpoint_resume,1840,15.689903020858765 4,cold_restart,4151,21.702080011367798 4,checkpoint_resume,1839,14.411330461502075 5,cold_restart,4152,21.270909070968628 5,checkpoint_resume,1841,14.953510999679565
+Web Search tool :
+trial_num,strategy,tokens,time 1,cold_restart,12297,51.90117883682251 1,checkpoint_resume,7270,35.83934760093689 2,cold_restart,12484,55.4277081489563 2,checkpoint_resume,7299,32.439940452575684 3,cold_restart,12475,56.028706550598145 3,checkpoint_resume,7289,32.439361333847046 4,cold_restart,12285,53.37538480758667 4,checkpoint_resume,7309,35.71441316604614 5,cold_restart,12489,48.61072111129761 5,checkpoint_resume,7296,35.33976650238037
+Whether TOol:
+trial_num,strategy,tokens,time 1,cold_restart,4210,24.9767804145813 1,checkpoint_resume,2219,16.30518078804016 2,cold_restart,4114,34.65650725364685 2,checkpoint_resume,2203,16.83026123046875 3,cold_restart,4207,24.464672803878784 3,checkpoint_resume,2221,16.982393980026245 4,cold_restart,4210,24.635809183120728 4,checkpoint_resume,2213,17.296470880508423 5,cold_restart,4796,40.38377928733826 5,checkpoint_resume,2213,16.79320001602173
+Benchmark - 2:
+
+50Agents : 
+FIFO : 
+trial_num,scheduler,total_time,p95_high_pri_time,rate_limit_errors
+1,fifo,33.92868900299072,14.3356065,0
+2,fifo,32.83451461791992,13.14824265,0
+3,fifo,33.75809645652771,12.4981783,0
+
+TOken aware : 
+trial_num,scheduler,total_time,p95_high_pri_time,rate_limit_errors
+1,token_aware,38.20914649963379,6.752469,0
+2,token_aware,37.91567921638489,6.7401973,0
+3,token_aware,37.829663038253784,7.01371135,0
+Priority : 
+trial_num,scheduler,total_time,p95_high_pri_time,rate_limit_errors
+1,priority,28.00270414352417,7.1121851,0
+2,priority,27.994077920913696,7.7648993,0
+3,priority,28.27807378768921,6.9886894999999996,0
+100 Agents : 
+FIFO
+trial_num,scheduler,total_time,p95_high_pri_time,rate_limit_errors 1,fifo,57.95685291290283,16.1146329,0 2,fifo,102.73025679588318,13.19410255,1 3,fifo,53.352145195007324,19.595163650000003,0
+Priority :
+trial_num,scheduler,total_time,p95_high_pri_time,rate_limit_errors 1,priority,59.5377721786499,8.550952100000002,0 2,priority,54.781617403030396,11.6480265,0 3,priority,53.83179974555969,8.9423404,0
+Token Aware :
+trial_num,scheduler,total_time,p95_high_pri_time,rate_limit_errors 1,token_aware,87.61284971237183,8.019095000000002,0 2,token_aware,82.32031893730164,7.66258335,0 3,token_aware,77.414705991745,7.87079665,0
+
+200 Agents : 
+FIFO :
+trial_num,scheduler,total_time,p95_high_pri_time,rate_limit_errors
+1,fifo,97.20112156867981,12.405822950000001,29
+2,fifo,94.44893383979797,11.81366525,73
+3,fifo,99.93852829933167,10.656093299999998,106
+Priority : 
+trial_num,scheduler,total_time,p95_high_pri_time,rate_limit_errors
+1,priority,95.36742949485779,7.731543599999999,116
+2,priority,106.82799530029297,25.084983549999997,23
+3,priority,83.98596143722534,8.395792199999999,0
+TOken Aware : 
+trial_num,scheduler,total_time,p95_high_pri_time,rate_limit_errors
+1,token_aware,145.59039664268494,6.8461008,0
+2,token_aware,130.94829201698303,6.519482699999999,0
+3,token_aware,136.94299340248108,7.5325229,0
+Benchmark 3 :
+==============================
+=== FAULT ISOLATION RESULTS ===
+==============================
+Total Agents: 1000
+Injected Faults (Expected Failed): 300
+Actual Failed: 300
+Expected Completed: 700
+Actual Completed: 700
+Time Taken: 46.02s
+==============================
+=== FAULT ISOLATION RESULTS ===
+==============================
+Total Agents: 1000
+Injected Faults (Expected Failed): 300
+Actual Failed: 300
+Expected Completed: 700
+Actual Completed: 700
+Time Taken: 45.80s
+==============================
+=== FAULT ISOLATION RESULTS ===
+==============================
+Total Agents: 1000
+Injected Faults (Expected Failed): 300
+Actual Failed: 300
+Expected Completed: 700
+Actual Completed: 700
+Time Taken: 44.61s
+
+
 ## 2026-08-17 - Benchmarking Results Explanation. 
 
 # AgentOS — Benchmarks

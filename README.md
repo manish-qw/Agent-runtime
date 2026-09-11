@@ -47,7 +47,7 @@ AgentOS is designed to be rigorously tested at scale.
 **The Solution:** AgentOS's native Checkpoint Resume capability.
 
 <img src="benchmark1_checkpoint.png" width="600" alt="Benchmark 1: Checkpoint Efficiency">
-*Result: Checkpoint-based recovery reduces token consumption by ~49.5% and completion time by ~29.1% versus cold-restart when recovering a crashed 10-step agent.*
+*Result: Checkpoint-based recovery reduces token consumption by ~41% and completion time by ~38% versus cold-restart when recovering a crashed 10-step agent.*
 
 ### Benchmark 2: Scheduler Comparison Under Token Budget
 **The Problem:** Firing 100 concurrent agents simultaneously will organically trigger `429 Rate Limit` storms, forcing exponential backoffs and destroying throughput.
@@ -64,7 +64,7 @@ AgentOS is designed to be rigorously tested at scale.
 **The Solution:** AgentOS `Runtime.execute` sandboxing.
 
 <img src="benchmark3_fault.png" width="600" alt="Benchmark 3: Fault Isolation">
-*Result: When injecting a fatal crash randomly into 90% of a 1,000-agent swarm, AgentOS isolated 100% of the injected faults. The overarching OS event loop remained perfectly stable, ensuring exactly 10% of sibling agents completed their work undisturbed despite 900 concurrent runtime crashes.*
+*Result: When injecting a fatal crash randomly into 300 out of 1,000 concurrent agents (30%), AgentOS achieved >99% fault isolation with zero cross-contamination. The overarching OS event loop remained perfectly stable, ensuring all healthy sibling agents completed their work undisturbed despite 300 concurrent runtime crashes.*
 
 ---
 
